@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.10"
     id("com.google.devtools.ksp") version "2.3.6"
     id("com.google.dagger.hilt.android") version "2.59.2"
+    id("de.mannodermaus.android-junit") version "2.0.2"
 }
 
 android {
@@ -33,10 +34,16 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation("com.google.dagger:hilt-android:2.59.2")
     ksp("com.google.dagger:hilt-compiler:2.59.2")
-    testImplementation("junit:junit:4.13.2")
+    val junitBom = platform("org.junit:junit-bom:5.14.1")
+    testImplementation(junitBom)
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    androidTestImplementation(junitBom)
+    androidTestImplementation("org.junit.jupiter:junit-jupiter-api")
     androidTestImplementation(platform("androidx.compose:compose-bom:2026.02.01"))
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.compose.ui:ui-test-android")
+    androidTestImplementation("androidx.test:core:1.6.1")
     androidTestImplementation("androidx.test:runner:1.6.2")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

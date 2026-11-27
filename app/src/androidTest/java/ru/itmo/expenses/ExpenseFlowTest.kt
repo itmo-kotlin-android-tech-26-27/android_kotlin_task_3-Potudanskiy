@@ -3,51 +3,54 @@ package ru.itmo.expenses
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.core.app.ActivityScenario
+import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
+import java.util.UUID
+import org.junit.jupiter.api.Test
 
-@RunWith(AndroidJUnit4::class)
+@OptIn(ExperimentalTestApi::class)
 class ExpenseFlowTest {
-    @get:Rule val rule = createAndroidComposeRule<MainActivity>()
-
-    @Test fun addExpenseRotateAndReturnWithoutDuplicate() {
-        val note = "Покупка для проверки"
-        rule.onNodeWithText("Учет расходов").assertIsDisplayed()
-        capture("01-history")
-        rule.onNodeWithText("+  Добавить расход").performClick()
-        rule.onNodeWithText("Сохранить расход").performScrollTo().performClick()
-        rule.onNodeWithText("Введите сумму от 0,01 до 999 999,99 ₽").assertExists()
-        rule.onNodeWithText("Сумма, ₽").performTextInput("590,50")
-        rule.onNodeWithText("Категория · Выбрать").performClick()
-        rule.onNodeWithText("Продукты").performClick()
-        rule.onNodeWithText("Банк · Выбрать").performClick()
-        rule.onNodeWithText("Альфа-Банк").performClick()
-        rule.onNodeWithText("Комментарий (необязательно)").performTextInput(note)
-        rule.activityRule.scenario.recreate()
-        rule.onNodeWithText(note).assertExists()
-        capture("02-form")
-        rule.onNodeWithText("Сохранить расход").performScrollTo().performClick()
-        rule.onNodeWithText("Итоги месяца").assertIsDisplayed()
-        capture("03-result")
-        rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
-        rule.onNodeWithText("Изменить расход").assertExists()
-        rule.onNodeWithText("Сохранить расход").performScrollTo().performClick()
-        rule.onNodeWithText("К истории расходов").performScrollTo().performClick()
-        rule.onAllNodesWithText(note).assertCountEquals(1)
-        rule.onNodeWithText(note).performClick()
-        rule.onNodeWithText("Удалить расход", substring = false).performScrollTo().performClick()
-        rule.onNodeWithText("Удалить", substring = false).performClick()
-        rule.onNodeWithText(note).assertDoesNotExist()
+    @Test
+    fun addExpenseRotateAndReturnWithoutDuplicate() = runEmptyComposeUiTest {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            val note = "Покупка для проверки " + UUID.randomUUID().toString().take(8)
+            onNodeWithText("Учет расходов").assertIsDisplayed()
+            capture("01-history")
+            onNodeWithText("+  Добавить расход").performClick()
+            onNodeWithText("Сохранить расход").performScrollTo().performClick()
+            onNodeWithText("Введите сумму от 0,01 до 999 999,99 ₽").assertExists()
+            onNodeWithText("Сумма, ₽").performTextInput("590,50")
+            onNodeWithText("Категория · Выбрать").performClick()
+            onNodeWithText("Продукты").performClick()
+            onNodeWithText("Банк · Выбрать").performClick()
+            onNodeWithText("Альфа-Банк").performClick()
+            onNodeWithText("Комментарий (необязательно)").performTextInput(note)
+            scenario.recreate()
+            onNodeWithText(note).assertExists()
+            capture("02-form")
+            onNodeWithText("Сохранить расход").performScrollTo().performClick()
+            onNodeWithText("Итоги месяца").assertIsDisplayed()
+            capture("03-result")
+            scenario.recreate()
+            onNodeWithText("Итоги месяца").assertIsDisplayed()
+            scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+            onNodeWithText("Изменить расход").assertExists()
+            onNodeWithText(note).assertExists()
+            onNodeWithText("Сохранить расход").performScrollTo().performClick()
+            onNodeWithText("К истории расходов").performScrollTo().performClick()
+            onAllNodesWithText(note).assertCountEquals(1)
+            onNodeWithText(note).performClick()
+            onNodeWithText("Удалить расход", substring = false).performScrollTo().performClick()
+            onNodeWithText("Удалить", substring = false).performClick()
+            onNodeWithText(note).assertDoesNotExist()
+        }
     }
 
-    private fun capture(name: String) {
-        rule.waitForIdle()
-        val bitmap = rule.onRoot().captureToImage().asAndroidBitmap()
-        val folder = File(rule.activity.externalMediaDirs.first(), "lab3-screens")
+    private fun ComposeUiTest.capture(name: String) {
+        waitForIdle()
+        val bitmap = onRoot().captureToImage().asAndroidBitmap()
+        val folder = File(InstrumentationRegistry.getInstrumentation().targetContext.externalMediaDirs.first(), "lab3-screens")
         check(folder.isDirectory || folder.mkdirs())
         File(folder, "$name.png").outputStream().use { output ->
             check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, output))

@@ -38,16 +38,16 @@ class LocalExpenseRepository @Inject constructor(@ApplicationContext context: Co
         val array = JSONArray(saved)
         return List(array.length()) { index ->
             val row = array.getJSONObject(index)
-            Expense(row.getString("id"), row.getLong("cents"), Category.valueOf(row.getString("category")),
-                Bank.valueOf(row.getString("bank")), LocalDate.parse(row.getString("date")), row.getString("note"))
+            Expense(row.getString("id"), row.getLong("cents"), ExpenseCatalog.category(row.getString("category")),
+                ExpenseCatalog.bank(row.getString("bank")), LocalDate.parse(row.getString("date")), row.getString("note"))
         }
     }
 
     private fun persist(entries: List<Expense>) {
         val array = JSONArray()
         entries.forEach { e ->
-            array.put(JSONObject().put("id", e.id).put("cents", e.cents).put("category", e.category.name)
-                .put("bank", e.bank.name).put("date", e.date.toString()).put("note", e.note))
+            array.put(JSONObject().put("id", e.id).put("cents", e.cents).put("category", e.category.id)
+                .put("bank", e.bank.id).put("date", e.date.toString()).put("note", e.note))
         }
         storage.edit().putString("entries", array.toString()).apply()
     }

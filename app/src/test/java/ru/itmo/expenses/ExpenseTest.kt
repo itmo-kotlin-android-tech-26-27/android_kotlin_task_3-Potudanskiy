@@ -2,8 +2,8 @@ package ru.itmo.expenses
 
 import java.time.LocalDate
 import java.time.YearMonth
-import org.junit.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
 class ExpenseTest {
     private val day = LocalDate.of(2026, 11, 24)
@@ -17,21 +17,21 @@ class ExpenseTest {
     }
     @Test fun rejectsInvalidAmounts() {
         listOf("", "0", "-10", "0.001", "1000000", "1e3", "abc", "NaN").forEach {
-            assertNull(it, parseAmount(it))
+            assertNull(parseAmount(it), it)
         }
     }
     @Test fun seedCoversFourBanksInTheCurrentMonth() {
         for (today in listOf(day, day.withDayOfMonth(1))) {
             val demo = demoExpenses(today)
-            assertEquals(Bank.entries.toSet(), demo.map { it.bank }.toSet())
+            assertEquals(4, demo.map { it.bank }.distinct().size)
             assertTrue(demo.all { !it.date.isAfter(today) && YearMonth.from(it.date) == month })
         }
     }
     @Test fun addingPurchaseUpdatesBothTotals() {
-        val purchase = Expense("new-id", 59050, Category.FOOD, Bank.ALFA, day, "Магазин")
+        val purchase = Expense("new-id", 59050, ExpenseCatalog.category("FOOD"), ExpenseCatalog.bank("ALFA"), day, "Магазин")
         val november = totals(inMonth(seed + purchase + purchase.copy(date = day.minusMonths(1)), month))
         assertEquals(474050L, november.total)
-        assertEquals(336050L, november.categories[Category.FOOD])
+        assertEquals(336050L, november.categories[ExpenseCatalog.category("FOOD")])
     }
     @Test fun monthWithoutEntriesHasZeroTotal() {
         val empty = inMonth(seed, month.minusMonths(1))
